@@ -354,6 +354,45 @@ const initiateBooking = async (req, res) => {
       });
     }
   };
+
+  const completeBooking = async (req, res) => {
+    const { bookingId } = req.body;
+  
+    try {
+      // Validate input parameter
+      if (!bookingId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Booking ID is required.',
+        });
+      }
+  
+      // Update the status to "completed"
+      const updatedBooking = await db('booking')
+        .where('id', bookingId)
+        .update({ status: 'completed', time_end: new Date().toISOString() }, ['id', 'status', 'time_end']);
+  
+      if (!updatedBooking.length) {
+        return res.status(404).json({
+          success: false,
+          message: `No booking found with id ${bookingId}`,
+        });
+      }
+  
+      res.status(200).json({
+        success: true,
+        message: 'Booking status updated to "completed" successfully.',
+        data: updatedBooking[0],
+      });
+    } catch (error) {
+      console.error('Error in completeBooking:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to update booking status.',
+        error: error.message,
+      });
+    }
+  };
   
 
 function generateBookings(startDateTime) {
@@ -390,4 +429,4 @@ function generateBookings(startDateTime) {
   //generateBookings('2024-11-25 08:00'); 
   
 
-module.exports = { calculatePrice, initiateBooking, getNotifications, assignDriver, getDriverNotifications };
+module.exports = { calculatePrice, initiateBooking, getNotifications, assignDriver, getDriverNotifications, completeBooking };

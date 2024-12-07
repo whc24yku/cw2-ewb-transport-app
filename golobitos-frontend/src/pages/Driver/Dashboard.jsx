@@ -13,6 +13,7 @@ import ENV from '../../env';
 
 const DriverDashboard = ({ driverId }) => {
   const [trips, setTrips] = useState([]);
+  const [completetrips, setCompleteTrips] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [expandedRow, setExpandedRow] = useState(null);
@@ -25,7 +26,7 @@ const DriverDashboard = ({ driverId }) => {
   const [dropoffPoint, setDropoffPoint] = useState("");
 
   let pendingTrips = trips.filter((trip) => trip.status === "Active");
-  const completedTrips = trips.filter((trip) => trip.status === "Completed");
+  let completedTrips = completetrips.filter((trip) => trip.status === "Completed");
 
   useEffect(() => {
     const userDetails = JSON.parse(localStorage.getItem('userDetails'));
@@ -95,10 +96,50 @@ const DriverDashboard = ({ driverId }) => {
     fetchPendingTrips();
   }, []);
 
-  pendingTrips = trips.filter((trip) => trip.status === "Active");
+  
 
+  useEffect(() => {
+    const fetchCompletedTrips = async () => {
+      try {
+        const userDetails = JSON.parse(localStorage.getItem('userDetails'));
+        const email = userDetails?.email;
+  
+        if (email) {
+          const response = await axios.get(`${ENV.API_BASE_URL}/customer/book-transport/get-driver-notifications`, {
+            params: { email },
+          });
+
+          console.log("Fetched Notifications: ", response.data.notifications);
+  
+          const notifications = response.data.notifications;
+          const completedTrips = notifications
+            .filter((notif) => notif.status === "completed")
+            .map((notif) => ({
+              id: notif.id,
+              pickup: notif.pickup,
+              dropoff: notif.dropoff,
+              status: "Completed",
+              details: `Trip to ${notif.dropoff}, dropoff at ${formatDateTime(notif.time_end)}, expected duration: 30 mins.`,
+            }));
+            
+            console.log("Mapped Completed Trips: ", completedTrips);
+            setCompleteTrips(completedTrips);
+          console.log(" Trips: ", trips);
+        }
+      } catch (error) {
+        console.error("Error fetching pending trips:", error);
+      }
+    };
+  
+    fetchCompletedTrips();
+  }, []);
+
+  pendingTrips = trips.filter((trip) => trip.status === "Active");
+  completedTrips = completetrips.filter((trip) => trip.status === "Completed");
+  
 
   //console.log("****Mapped Pending Trips: ", pendingTrips);
+  //console.log("****Mapped Completed Trips: ", completedTrips);
   
 
   const handleNotificationClick = () => {
@@ -188,12 +229,28 @@ const DriverDashboard = ({ driverId }) => {
     }
   };
 
-  const handleCompleteTrip = (id) => {
-    setTrips((prevTrips) =>
-      prevTrips.map((trip) =>
-        trip.id === id ? { ...trip, status: "Completed" } : trip
-      )
-    );
+  const handleCompleteTrip = async (id) => {
+    try {
+      // Call the API to update the booking status
+      const response = await axios.post(`${ENV.API_BASE_URL}/customer/book-transport/complete-booking`, {
+        bookingId: id,
+      });
+  
+      if (response.data.success) {
+        // Update the trip status in the front-end state only if the API call was successful
+        setTrips((prevTrips) =>
+          prevTrips.map((trip) =>
+            trip.id === id ? { ...trip, status: "Completed" } : trip
+          )
+        );
+      } else {
+        console.error('Failed to complete trip:', response.data.message);
+        // Optionally, handle error messages in the UI
+      }
+    } catch (error) {
+      console.error('Error in handleCompleteTrip:', error.message);
+      // Optionally, handle errors in the UI
+    }
   };
 
   function formatDateTime(dateTime) {
@@ -270,7 +327,7 @@ const DriverDashboard = ({ driverId }) => {
                 <div className="flex justify-between mt-2">
                   <button
                     className="bg-green-500 text-white py-1 px-2 rounded-lg text-sm"
-                    onClick={() => handleAction(notification.id, "accepted", notification)}
+                    onClick={() => handleAction(notification.id, "accepted", notification).then(() => window.location.reload())}
                   >
                     Accept
                   </button>
@@ -320,7 +377,7 @@ const DriverDashboard = ({ driverId }) => {
         <div className="mt-2">
           <button
             className="bg-green-500 text-white py-1 px-3 rounded-lg text-sm"
-            onClick={() => handleCompleteTrip(trip.id)}
+            onClick={() => handleCompleteTrip(trip.id).then(() => window.location.reload())}
           >
             Complete
           </button>
