@@ -12,6 +12,7 @@ import { useLanguage } from '../../context/LanguageContext'; // Import useLangua
 
 const Login = () => {
   const [email, setEmail] = useState('');
+  const [accountType, setAccountType] = useState('Premium');
   const [password, setPassword] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
@@ -26,7 +27,10 @@ const Login = () => {
   const { loginWithRedirect, user, isAuthenticated } = useAuth0();
   const { language, setLanguage } = useLanguage(); // Get language and setter from context
   
-
+// Add the Premium and Free buttons
+const handleAccountTypeChange = (type) => {
+  setAccountType(type); // Update account type (Premium or Free)
+};
 
   // Handle standard login
   const handleLogin = async (e) => {
@@ -38,7 +42,12 @@ const Login = () => {
         localStorage.setItem('userDetails', JSON.stringify({ name: response.data.user.name, email: response.data.user.email }));
         toast.success('Login successful!');
         // Redirect to the role-based dashboard
-        navigate(`/${role.toLowerCase()}/dashboard`);
+        if (accountType === "Premium"){
+          navigate(`/${role.toLowerCase()}/dashboard`);
+        } else {
+          navigate(`/${role.toLowerCase()}/dashboard-free`);
+        }
+        
       }
     } catch (error) {
       console.error('Login failed:', error);
@@ -204,6 +213,26 @@ const Login = () => {
                 <FontAwesomeIcon icon={faFacebook} />
                 <FontAwesomeIcon icon={faTwitter} />
               </div>
+            </button>
+          </div>
+
+          {/* Account Type Selection (Premium or Free) */}
+          <div className="mt-4 flex justify-center space-x-4">
+            <button
+              onClick={() => handleAccountTypeChange('Premium')}
+              className={`px-4 py-2 rounded-full ${
+                accountType === 'Premium' ? 'bg-[#027f86] text-white' : 'bg-gray-200 text-gray-700'
+              } hover:bg-[#027f86] hover:text-white transition-all`}
+            >
+              {language === 'en' ? 'Premium' : 'Premium'}
+            </button>
+            <button
+              onClick={() => handleAccountTypeChange('Free')}
+              className={`px-4 py-2 rounded-full ${
+                accountType === 'Free' ? 'bg-[#027f86] text-white' : 'bg-gray-200 text-gray-700'
+              } hover:bg-[#027f86] hover:text-white transition-all`}
+            >
+              {language === 'en' ? 'Free' : 'Gratis'}
             </button>
           </div>
 

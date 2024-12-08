@@ -6,9 +6,40 @@ import { faGlobe } from '@fortawesome/free-solid-svg-icons';
 
 const Navbar = () => {
   const { language, setLanguage } = useLanguage();
+
+  // Translations
+  const translations = {
+    en: {
+      home: 'Home',
+      about: 'About Us',
+      contact: 'Contact',
+      login: 'Login',
+      tripadvisorButton: 'Explore Lobitos on TripAdvisor',
+      disclaimer: 'This link redirects to TripAdvisor. Content is not managed by GoLobitos.',
+      languageToggle: 'Español',
+    },
+    es: {
+      home: 'Inicio',
+      about: 'Sobre Nosotros',
+      contact: 'Contacto',
+      login: 'Iniciar Sesión',
+      tripadvisorButton: 'Explora Lobitos en TripAdvisor',
+      disclaimer: 'Este enlace redirige a TripAdvisor. El contenido no es gestionado por GoLobitos.',
+      languageToggle: 'English',
+    },
+  };
+
+  const t = translations[language]; // Current translations
+
+  const openTripAdvisor = () => {
+    window.open(
+      'https://www.tripadvisor.com/Attractions-g1063984-Activities-Lobitos_Piura_Region.html',
+      '_blank'
+    );
+  };
+
   return (
     <header className="bg-[#027f86] text-white p-5 shadow-md">
-      {/* Main Navbar Content */}
       <div className="flex items-center justify-between">
         {/* Logo and App Name */}
         <div className="flex items-center space-x-3">
@@ -18,38 +49,49 @@ const Navbar = () => {
           <h1 className="text-2xl font-semibold">GoLobitos</h1>
         </div>
 
+        {/* TripAdvisor Button */}
+        <div className="flex items-center flex-col">
+          <button
+            onClick={openTripAdvisor}
+            className="bg-yellow-300 text-[#027f86] px-4 py-2 rounded-lg hover:bg-yellow-400 transition-all"
+          >
+            {t.tripadvisorButton}
+          </button>
+          <p className="text-xs text-white mt-1">{t.disclaimer}</p>
+        </div>
+
         {/* Navigation Links + Language Toggle */}
         <nav className="flex items-center space-x-6">
           <Link
             to="/landing"
             className="text-white hover:text-yellow-300 transition-all"
           >
-            Home
+            {t.home}
           </Link>
           <Link
             to="/about"
             className="text-white hover:text-yellow-300 transition-all"
           >
-            About Us
+            {t.about}
           </Link>
           <Link
             to="/contact"
             className="text-white hover:text-yellow-300 transition-all"
           >
-            Contact
+            {t.contact}
           </Link>
           <Link
             to="/login"
             className="bg-yellow-300 text-[#027f86] px-4 py-2 rounded-lg hover:bg-yellow-400 transition-all"
           >
-            Login
+            {t.login}
           </Link>
           <button
             onClick={() => setLanguage(language === 'en' ? 'es' : 'en')}
             className="flex items-center bg-yellow-300 text-[#027f86] px-4 py-2 rounded-lg hover:bg-yellow-400 transition-all"
           >
             <FontAwesomeIcon icon={faGlobe} className="mr-2" />
-            {language === 'en' ? 'Español' : 'English'}
+            {t.languageToggle}
           </button>
         </nav>
       </div>

@@ -8,6 +8,7 @@ import { LanguageProvider } from './context/LanguageContext';
 import Landing from './pages/Landing'; // Import the customer landing page
 import Login from './pages/Auth/Login'; // Import Login page
 import CustomerDashboard from './pages/Customer/Dashboard';
+import CustomerDashboardFree from './pages/Customer/DashboardFree';
 import CustomerBookTransport from './pages/Customer/BookTransport';
 import CustomerMarketplace from './pages/Customer/Marketplace';
 import CustomerEmergencyConfirmation from './pages/Customer/EmergencyConfirmation';
@@ -97,6 +98,7 @@ const App = () => {
               <Route path="/landing" element={<Landing />} />
               <Route path="/login" element={<Login />} />
               <Route path="/customer/dashboard" element={<CustomerDashboard />} />
+              <Route path="/customer/dashboard-free" element={<CustomerDashboardFree />} />
               <Route path="/customer/book-transport" element={<CustomerBookTransport />} />
               <Route path="/customer/marketplace" element={<CustomerMarketplace />} />
               <Route path="/customer/emergency-confirmation" element={<CustomerEmergencyConfirmation />} />
