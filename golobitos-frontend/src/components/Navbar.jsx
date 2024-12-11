@@ -33,7 +33,7 @@ const Navbar = () => {
 
   const openTripAdvisor = () => {
     window.open(
-      'https://www.tripadvisor.com/Attractions-g1063984-Activities-Lobitos_Piura_Region.html',
+      'https://www.tripadvisor.co.uk/Tourism-g2212223-Lobitos_Piura_Region-Vacations.html',
       '_blank'
     );
   };

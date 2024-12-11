@@ -8,6 +8,8 @@ exports.up = function(knex) {
       table.string('location_departure').notNullable(); // Departure location
       table.string('location_destination').notNullable(); // Destination location
       table.integer('driver_id').unsigned().notNullable(); // Driver ID
+      table.string('user_email').notNullable(); 
+      table.string('user_name').notNullable();
       table.integer('customer_pack_id').unsigned().notNullable(); // Customer package ID
       table.integer('number_of_customers').notNullable(); // Number of customers
       table.integer('inventory_pack_id').unsigned().notNullable(); // Inventory package ID
@@ -19,6 +21,7 @@ exports.up = function(knex) {
       table.string('transport_type').notNullable(); // Transport type (e.g., standard, medical)
       table.boolean('priority').notNullable().defaultTo(false); // Priority flag
       table.string('status').notNullable();
+      table.string('payment_method').notNullable();
       
       // Optionally, you can add foreign key constraints if driver_id, customer_pack_id, or inventory_pack_id reference other tables:
       // table.foreign('driver_id').references('drivers.id');

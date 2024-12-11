@@ -17,6 +17,8 @@ import {
   faUser,
   faSearch,
 } from '@fortawesome/free-solid-svg-icons';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useLanguage } from '../../context/LanguageContext';
@@ -51,7 +53,12 @@ const AdminBookTransport = () => {
   const [autocompleteDropoff, setAutocompleteDropoff] = useState(null);
   const [price, setPrice] = useState(null);  // State to hold the price
   const [error, setError] = useState(null);
+  const [isShared, setIsShared] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('');
+  const [customerCount, setCustomerCount] = useState('');
   const { language, setLanguage } = useLanguage(); // Get language and setter from context
+
+  const paymentOptions = ['Credit/Debit Card', 'Google Pay', 'Apple Pay', 'Cash'];
 
   useEffect(() => {
     const userDetails = JSON.parse(localStorage.getItem('userDetails'));
@@ -189,6 +196,37 @@ const AdminBookTransport = () => {
     }
   };
 
+  const handleTransportTypeChange = (type) => {
+    setTransportType(type);
+    if (['standard', 'medical'].includes(type)) {
+      setWeight('');
+    } else {
+      setCustomerCount('');
+    }
+  };
+
+  // Vehicle options update based on transport type
+  useEffect(() => {
+    const updateVehicleOptions = () => {
+      let options;
+      if (['standard', 'medical'].includes(transportType)) {
+        options = [
+          { value: 'smallcar', label: language === 'en' ? 'Small Car' : 'Coche Pequeño' },
+          { value: 'largecar', label: language === 'en' ? 'Large Car' : 'Coche Grande' },
+          { value: 'van', label: language === 'en' ? 'Van' : 'Furgoneta' },
+        ];
+      } else if (['livestock', 'food', 'fish', 'general'].includes(transportType)) {
+        options = [
+          { value: 'van', label: language === 'en' ? 'Van' : 'Furgoneta' },
+          { value: 'truck', label: language === 'en' ? 'Truck' : 'Camión' },
+        ];
+      }
+      setVehicleOptions(options);
+    };
+    updateVehicleOptions();
+  }, [transportType, language]);
+  
+
   const timeSlots = [
     '00:00 - 01:00',
     '01:00 - 02:00',
@@ -217,21 +255,21 @@ const AdminBookTransport = () => {
 ];
 
 
-  const transportOptions = [
-    { value: 'standard', label: language === 'en' ? 'Standard' : 'Estándar', icon: faCar },
-    { value: 'medical', label: language === 'en' ? 'Medical Emergency' : 'Emergencia Médica', icon: faHeartbeat },
-    { value: 'livestock', label: language === 'en' ? 'Livestock Transport' : 'Transporte de Ganado', icon: faHorse },
-    { value: 'food', label: language === 'en' ? 'Food & Perishables' : 'Alimentos y Perecederos', icon: faAppleAlt },
-    { value: 'fish', label: language === 'en' ? 'Fish & Aquatics' : 'Peces y Acuáticos', icon: faFish },
-    { value: 'general', label: language === 'en' ? 'General Goods' : 'Bienes Generales', icon: faTruck },
-  ];
+const transportOptions = [
+  { value: 'standard', label: language === 'en' ? 'Standard' : 'Estándar', icon: faCar },
+  !isShared && { value: 'medical', label: language === 'en' ? 'Medical Emergency' : 'Emergencia Médica', icon: faHeartbeat }, // Hide when isShared is true
+  { value: 'livestock', label: language === 'en' ? 'Livestock Transport' : 'Transporte de Ganado', icon: faHorse },
+  { value: 'food', label: language === 'en' ? 'Food & Perishables' : 'Alimentos y Perecederos', icon: faAppleAlt },
+  { value: 'fish', label: language === 'en' ? 'Fish & Aquatics' : 'Peces y Acuáticos', icon: faFish },
+  { value: 'general', label: language === 'en' ? 'General Goods' : 'Bienes Generales', icon: faTruck },
+].filter(Boolean);
 
-  const vehicleOptions = [
-    { value: 'smallcar', label: language === 'en' ? 'Small Car' : 'Coche Pequeño' },
-    { value: 'largecar', label: language === 'en' ? 'Large Car' : 'Coche Grande' },
-    { value: 'van', label: language === 'en' ? 'Van' : 'Furgoneta' },
-    { value: 'truck', label: language === 'en' ? 'Truck' : 'Camión' },
-  ];
+const [vehicleOptions, setVehicleOptions] = useState([
+  { value: 'smallcar', label: language === 'en' ? 'Small Car' : 'Coche Pequeño' },
+  { value: 'largecar', label: language === 'en' ? 'Large Car' : 'Coche Grande' },
+  { value: 'van', label: language === 'en' ? 'Van' : 'Furgoneta' },
+  { value: 'truck', label: language === 'en' ? 'Truck' : 'Camión' },
+]);
 
   // Function to handle price retrieval (this should be implemented to fetch the price)
   const handleGetPrice = async () => {
@@ -242,9 +280,13 @@ const AdminBookTransport = () => {
         selectedTimeSlot,
         pickup,
         dropoff,
-        weight,
         transportType,
         vehicleType,
+        isShared,
+        ...(transportType === 'standard' || transportType === 'medical'
+          ? { customerCount }
+          : { weight }),
+          
       });
 
       if (response.data) {
@@ -260,16 +302,37 @@ const AdminBookTransport = () => {
 
   const handleBooking = async () => {
     try {
-        const response = await axios.post(`${ENV.API_BASE_URL}/customer/book-transport/calculate-distance`, { pickup, dropoff });
+        const response = await axios.post(`${ENV.API_BASE_URL}/customer/book-transport/initiate-booking`, {
+          selectedDate,
+          selectedTimeSlot,
+          pickup,
+          dropoff,
+          transportType,
+          vehicleType,
+          isShared,
+          ...(transportType === 'standard' || transportType === 'medical'
+            ? { customerCount }
+            : { weight }),
+            isPriority,
+            paymentMethod,
+            estimatedPrice: price,
+            userEmail,
+            userName,
+        });;
         
-        // Assuming the API response contains distance and duration
-        const { distance, duration } = response.data;
-
-        console.log("Distance:", distance);
-        console.log("Duration:", duration);
-    } catch (error) {
-        console.error("Error while calculating distance:", error);
-    }
+        if (response.data.success) {
+          console.log(response.data)
+          toast.success('Booking initiated successfully!');
+          setError(null);
+        } else {
+          toast.error('Failed to initiate booking. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error while initiating booking:', error);
+        toast.error('Error occurred while booking. Please try again.');
+        setError('Unable to fetch the price. Please try again later.');
+        setPrice(null);
+      }
 };
 
   const toggleLanguage = () => {
@@ -506,6 +569,21 @@ const AdminBookTransport = () => {
           </LoadScript>
         </div>
 
+        {/* Shared Checkbox */}
+        <div className="mb-3">
+          <label className="inline-flex items-center">
+            <input
+              type="checkbox"
+              checked={isShared}
+              onChange={() => setIsShared(!isShared)}
+              className="form-checkbox h-5 w-5 text-yellow-400"
+            />
+            <span className="ml-2 text-md">
+              {language === 'en' ? 'Shared Ride' : 'Viaje Compartido'}
+            </span>
+          </label>
+        </div>
+
         {/* Transport Type Selector */}
         <div className="mb-3">
           <label className="block text-md mb-1">
@@ -545,24 +623,38 @@ const AdminBookTransport = () => {
           </select>
         </div>
 
-        {/* Weight Field */}
         <div className="mb-3">
-          <label className="block text-md mb-1">
-            {language === 'en' ? 'Enter Weight (kg)' : 'Ingrese Peso (kg)'}
-          </label>
-          <input
-            type="number"
-            value={weight}
-            onChange={(e) => setWeight(e.target.value)}
-            className="w-full border border-gray-300 rounded-md px-2 py-2 text-sm"
-            placeholder={language === 'en' ? 'Enter Approx weight' : 'Ingrese el peso aproximado'}
-          />
-          <p className="text-sm text-gray-500 mt-1">
+  <label htmlFor="inputField" className="block mb-1 text-sm font-medium">
+    {['standard', 'medical'].includes(transportType)
+      ? language === 'en' ? 'Number of Customers' : 'Número de Clientes'
+      : language === 'en' ? 'Enter Weight (kg)' : 'Ingrese el Peso (kg)'}
+  </label>
+  {['standard', 'medical'].includes(transportType) ? (
+    <input
+      type="number"
+      id="customerCount"
+      value={customerCount}
+      onChange={(e) => setCustomerCount(e.target.value)}
+      className="w-full p-2 border rounded"
+      placeholder={language === 'en' ? 'Number of Customers' : 'Número de Clientes'}
+    />
+  ) : (
+    <input
+      type="number"
+      id="weight"
+      value={weight}
+      onChange={(e) => setWeight(e.target.value)}
+      className="w-full p-2 border rounded"
+      placeholder={language === 'en' ? 'Enter Weight' : 'Ingrese el Peso'}
+    />
+    
+  )}
+  <p className="text-sm text-gray-500 mt-1">
             {language === 'en'
               ? 'Note: Price may vary depending on the actual weight.'
               : 'Nota: El precio puede variar dependiendo del peso real.'}
-          </p>
-        </div>
+  </p>
+</div>
 
         
         {/* Priority */}
@@ -579,13 +671,34 @@ const AdminBookTransport = () => {
           </label>
         </div>
 
+        <div className="mt-4">
+          <label htmlFor="paymentMethod" className="block text-lg font-semibold mb-2">
+            Payment Method
+          </label>
+          <select
+            id="paymentMethod"
+            value={paymentMethod}
+            onChange={(e) => setPaymentMethod(e.target.value)}
+            className="w-full p-2 mb-4 rounded-lg text-[#027f86] bg-white focus:outline-none"
+          >
+            <option value="" disabled>
+              Select Payment Method
+            </option>
+            {paymentOptions.map((method) => (
+              <option key={method} value={method}>
+                {method}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* Get Price Button */}
         <div className="mb-3 text-center">
           <button
             onClick={handleGetPrice}
             className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all"
           >
-            {language === 'en' ? 'Get Price' : 'Obtener Precio'}
+            {language === 'en' ? 'Get Fare' : 'Obtener Precio'}
           </button>
         </div>
 
@@ -616,6 +729,7 @@ const AdminBookTransport = () => {
           </button>
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 };

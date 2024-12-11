@@ -66,6 +66,7 @@ const calculatePrice = async (req, res) => {
     const vehicleTypePrices = {
         "Small car": 1.1,
         "Large car": 1.3,
+        "Mototaxi": 0.5,
         "Van": 1.5,
         "Truck": 2
     };
@@ -140,6 +141,7 @@ const calculatePrice = async (req, res) => {
 
 const initiateBooking = async (req, res) => {
     try {
+      console.log(`********************${req.body.estimatedPrice}`)
       const {
         selectedDate,
         selectedTimeSlot,
@@ -149,9 +151,13 @@ const initiateBooking = async (req, res) => {
         customerCount,
         transportType,
         vehicleType,
-        isShared
+        isShared, 
+        paymentMethod,
+        estimatedPrice,
+        userEmail,
+        userName,
       } = req.body;
-  
+      console.log(`####################${estimatedPrice}`)
       // Insert into the booking table with default values for unspecified fields
       const newBooking = await db('booking').insert({
         date: selectedDate,
@@ -170,15 +176,22 @@ const initiateBooking = async (req, res) => {
         customer_pack_id: 0, // Default to 0
         inventory_pack_id: 0, // Default to 0
         number_of_package: 0, // Default to 0
-        estimated_price: 0, // Default to 0, can be calculated later
+        estimated_price: estimatedPrice, // Default to 0, can be calculated later
         priority: false, // Default priority to false
-      }, ['id', 'time_start', 'time_end', 'location_departure', 'location_destination']);
+        payment_method: paymentMethod,
+        user_email: userEmail,
+        user_name: userName,
+      }, ['id', 'time_start', 'time_end', 'location_departure', 'location_destination', 'payment_method', 'estimated_price','user_email','user_name']);
 
       const bookingId = newBooking[0]?.id;
       const timeStart = newBooking[0]?.time_start;
       const timeEnd = newBooking[0]?.time_end;
       const locationDeparture = newBooking[0]?.location_departure;
       const locationDestination = newBooking[0]?.location_destination;
+      const payment = newBooking[0]?.payment_method;
+      const price = newBooking[0]?.estimated_price;
+      const email = newBooking[0]?.user_email;
+      const username = newBooking[0]?.user_name;
 
        // Insert a notification for the driver
     const newNotification = await db('notifications').insert({
@@ -190,7 +203,11 @@ const initiateBooking = async (req, res) => {
         time_start: timeStart,
         time_end: timeEnd,
         location_departure: locationDeparture,
-        location_destination: locationDestination
+        location_destination: locationDestination,
+        payment_method: payment,
+        estimated_price: price,
+        user_email: email,
+        user_name: username,
       });
       
       res.status(201).json({
@@ -328,7 +345,11 @@ const initiateBooking = async (req, res) => {
           "time_end",
           "location_departure as pickup",
           "location_destination as dropoff",
-          "status"
+          "status",
+          "payment_method",
+          "estimated_price",
+          "user_email",
+          "user_name",
         )
         .where({ driver_id: driverId })
         .orderBy("date", "desc");
@@ -354,6 +375,74 @@ const initiateBooking = async (req, res) => {
       });
     }
   };
+
+  const addVehicleDetails = async (req, res) => {
+    const {
+      userEmail, // Email of the user/driver
+      type, // Vehicle type (e.g., car, van, bike)
+      model, // Vehicle model
+      seats, // Number of seats
+      make, // Vehicle make (e.g., Toyota, Honda)
+      chasisNumber, // Unique chassis number
+      plateNumber, // Unique plate number
+      insuranceNumber, // Insurance policy number
+    } = req.body;
+  
+    try {
+      // Validate input parameters
+      if (!userEmail || !type || !model || !seats || !make || !chasisNumber || !plateNumber || !insuranceNumber) {
+        return res.status(400).json({
+          success: false,
+          message: 'userEmail, type, model, seats, make, chasisNumber, plateNumber, and insuranceNumber are required.',
+        });
+      }
+  
+      // Get userId from users table using userEmail
+      const user = await db('users')
+        .select('id')
+        .where('email', userEmail)
+        .first();
+  
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: `No user found with email ${userEmail}`,
+        });
+      }
+  
+      const userId = user.id;
+  
+      // Insert vehicle details into the 'drivers' table
+      const [vehicle] = await db('drivers')
+        .insert(
+          {
+            user_id: userId, // Reference to the user
+            type,
+            model,
+            seats,
+            make,
+            chasis_number: chasisNumber,
+            plate_number: plateNumber,
+            insurance_number: insuranceNumber,
+          },
+          ['id', 'user_id', 'type', 'model', 'seats', 'make', 'chasis_number', 'plate_number', 'insurance_number', 'validated', 'created_at', 'updated_at']
+        );
+  
+      res.status(201).json({
+        success: true,
+        message: 'Vehicle details added successfully.',
+        data: vehicle,
+      });
+    } catch (error) {
+      console.error('Error in addVehicleDetails:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to add vehicle details.',
+        error: error.message,
+      });
+    }
+  };
+  
 
   const completeBooking = async (req, res) => {
     const { bookingId } = req.body;
@@ -429,4 +518,4 @@ function generateBookings(startDateTime) {
   //generateBookings('2024-11-25 08:00'); 
   
 
-module.exports = { calculatePrice, initiateBooking, getNotifications, assignDriver, getDriverNotifications, completeBooking };
+module.exports = { calculatePrice, initiateBooking, getNotifications, assignDriver, getDriverNotifications, addVehicleDetails, completeBooking };

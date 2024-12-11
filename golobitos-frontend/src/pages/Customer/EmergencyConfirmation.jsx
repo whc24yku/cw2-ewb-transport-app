@@ -60,6 +60,9 @@ const CustomerEmergencyConfirmation = () => {
               {language === 'en' ? 'Medical - Non-Critical' : 'Médico - No Crítico'}
             </option>
             <option>
+              {language === 'en' ? 'Water Tanker Truck' : 'Camión cisterna de agua Potable'}
+            </option>
+            <option>
               {language === 'en' ? 'Fire Emergency' : 'Emergencia de Incendio'}
             </option>
             <option>
@@ -78,6 +81,7 @@ const CustomerEmergencyConfirmation = () => {
           </span>
           <select className="w-full mt-2 p-3 rounded-lg border border-gray-300 text-gray-700 focus:outline-none">
             <option>{language === 'en' ? 'Ambulance' : 'Ambulancia'}</option>
+            <option>{language === 'en' ? 'Water Tanker Truck' : 'Camión cisterna de agua Potable'}</option>
             <option>{language === 'en' ? 'Rescue Truck' : 'Camión de Rescate'}</option>
             <option>{language === 'en' ? 'Police Car' : 'Coche de Policía'}</option>
             <option>{language === 'en' ? 'Fire Engine' : 'Camión de Bomberos'}</option>

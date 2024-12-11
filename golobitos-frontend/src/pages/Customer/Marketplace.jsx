@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch, faList, faTh } from "@fortawesome/free-solid-svg-icons";
-import placeholderImage from "../../assets/images/placeholder.jpg";
+import anchovyImage from "../../assets/images/anchovy.png";
 import beefstickImage from "../../assets/images/beefstick.jpg";
 import handcraftedbasketImage from "../../assets/images/handcraftedbasket.jpg";
 import organichoneyImage from "../../assets/images/organichoney.jpg";
@@ -21,7 +21,7 @@ const translations = {
       {
         id: 1,
         name: "Handcrafted Basket",
-        price: "$25",
+        price: "S/25",
         category: "Artisanal Goods",
         image: handcraftedbasketImage,
         seller: "Local Artisans Co.",
@@ -29,7 +29,7 @@ const translations = {
       {
         id: 2,
         name: "Organic Honey",
-        price: "$10",
+        price: "S/10",
         category: "Food",
         image: organichoneyImage,
         seller: "Honey Hive Farms",
@@ -37,23 +37,23 @@ const translations = {
       {
         id: 3,
         name: "Guided City Tour",
-        price: "$50",
+        price: "S/50",
         category: "Tours",
         image: tourImage,
         seller: "City Tours LLC",
       },
       {
         id: 4,
-        name: "Fresh Salmon Fish",
-        price: "$30",
+        name: "Peruvian Anchovy",
+        price: "S/30",
         category: "Fishes",
-        image: placeholderImage,
+        image: anchovyImage,
         seller: "Seafood Market",
       },
       {
         id: 5,
         name: "Grass-fed Beef Steak",
-        price: "$40",
+        price: "S/40",
         category: "Meats",
         image: beefstickImage,
         seller: "Farm Fresh Meats",
@@ -61,7 +61,7 @@ const translations = {
       {
         id: 6,
         name: "Organic Vegetables",
-        price: "$15",
+        price: "S/15",
         category: "Groceries",
         image: organicvegetablesImage,
         seller: "Green Grocer",
@@ -78,7 +78,7 @@ const translations = {
       {
         id: 1,
         name: "Cesta hecha a mano",
-        price: "$25",
+        price: "S/25",
         category: "Productos artesanales",
         image: handcraftedbasketImage,
         seller: "Artesanos locales",
@@ -86,7 +86,7 @@ const translations = {
       {
         id: 2,
         name: "Miel orgánica",
-        price: "$10",
+        price: "S/10",
         category: "Alimentos",
         image: organichoneyImage,
         seller: "Granja de Miel Hive",
@@ -94,23 +94,23 @@ const translations = {
       {
         id: 3,
         name: "Tour guiado por la ciudad",
-        price: "$50",
+        price: "S/50",
         category: "Tours",
         image: tourImage,
         seller: "City Tours LLC",
       },
       {
         id: 4,
-        name: "Pescado fresco de salmón",
-        price: "$30",
+        name: "Anchoveta Peruana",
+        price: "S/30",
         category: "Peces",
-        image: placeholderImage,
+        image: anchovyImage,
         seller: "Mercado de Mariscos",
       },
       {
         id: 5,
         name: "Filete de res alimentado con pasto",
-        price: "$40",
+        price: "S/40",
         category: "Carnes",
         image: beefstickImage,
         seller: "Carnes Frescas de Granja",
@@ -118,7 +118,7 @@ const translations = {
       {
         id: 6,
         name: "Vegetales orgánicos",
-        price: "$15",
+        price: "S/15",
         category: "Verduras",
         image: organicvegetablesImage,
         seller: "Verduras Verdes",

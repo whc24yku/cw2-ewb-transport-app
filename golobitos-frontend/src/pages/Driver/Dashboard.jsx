@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import {
   faBell,
   faSync,
@@ -8,6 +10,7 @@ import {
   faLocationArrow,
   faAngleDown,
   faUser,
+  faCar,
 } from "@fortawesome/free-solid-svg-icons";
 import ENV from '../../env';
 
@@ -21,9 +24,27 @@ const DriverDashboard = ({ driverId }) => {
   const [userEmail, setUserEmail] = useState('');
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [showProfilePopup, setShowProfilePopup] = useState(false);
+  const [showCarPopup, setShowCarPopup] = useState(false);
   const [showTripModal, setShowTripModal] = useState(false);
   const [pickupPoint, setPickupPoint] = useState("");
   const [dropoffPoint, setDropoffPoint] = useState("");
+  const [carDetails, setCarDetails] = useState({
+    type: "small car",
+    model: "",
+    seats: "",
+    make: "",
+    chassis_number: "",
+    plate_number: "",
+    insurance_number: "",
+  });
+  const [showVehicleFields, setShowVehicleFields] = useState(false); // Manage visibility of vehicle fields
+  const [demographics, setDemographics] = useState({
+    phoneNumber: "",
+    age: "",
+    gender: "",
+    address: "",
+  });
+  
 
   let pendingTrips = trips.filter((trip) => trip.status === "Active");
   let completedTrips = completetrips.filter((trip) => trip.status === "Completed");
@@ -35,6 +56,9 @@ const DriverDashboard = ({ driverId }) => {
       setUserEmail(userDetails.email);
     }
   }, []);
+
+
+
 
   useEffect(() => {
     const handleOfflineStatus = () => setIsOffline(!navigator.onLine);
@@ -82,6 +106,9 @@ const DriverDashboard = ({ driverId }) => {
               dropoff: notif.dropoff,
               status: "Active",
               details: `Trip to ${notif.dropoff}, pickup at ${formatDateTime(notif.time_start)}, expected duration: 30 mins.`,
+              payment: notif.payment_method,
+              price: notif.estimated_price,
+              username: notif.user_name,
             }));
             
             console.log("Mapped Pending Trips: ", pendingTrips);
@@ -120,6 +147,9 @@ const DriverDashboard = ({ driverId }) => {
               dropoff: notif.dropoff,
               status: "Completed",
               details: `Trip to ${notif.dropoff}, dropoff at ${formatDateTime(notif.time_end)}, expected duration: 30 mins.`,
+              payment: notif.payment_method,
+              price: notif.estimated_price,
+              username: notif.user_name,
             }));
             
             console.log("Mapped Completed Trips: ", completedTrips);
@@ -141,7 +171,7 @@ const DriverDashboard = ({ driverId }) => {
   //console.log("****Mapped Pending Trips: ", pendingTrips);
   //console.log("****Mapped Completed Trips: ", completedTrips);
   
-
+  
   const handleNotificationClick = () => {
     setShowNotifications((prev) => !prev);
   };
@@ -167,6 +197,9 @@ const DriverDashboard = ({ driverId }) => {
               dropoff: notification.location_destination,
               status: "Pending",
               details: `Trip to ${notification.location_destination}, pickup at ${formattedTime}, expected duration: 30 mins.`,
+              payment: notification.payment_method,
+              price: notification.estimated_price,
+              username: notification.user_name,
             },
           ]);
           // Remove the notification after processing
@@ -188,6 +221,89 @@ const DriverDashboard = ({ driverId }) => {
 
   const toggleExpandRow = (id) => {
     setExpandedRow(expandedRow === id ? null : id);
+  };
+
+  // Profile popup toggle function
+  const toggleProfilePopup = () => {
+    setShowProfilePopup((prevState) => !prevState);
+  };
+
+
+const toggleCarPopup = () => {
+  setShowCarPopup(!showCarPopup);
+};
+
+  // Handle form data change
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setCarDetails((prevDetails) => ({
+      ...prevDetails,
+      [name]: value,
+    }));
+  };
+
+  // Handle form data change for demographics
+  const handleDemographicChange = (e) => {
+    const { name, value } = e.target;
+    setDemographics((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
+  };
+
+  // Handle form data change for car details
+  const handleCarDetailChange = (e) => {
+    const { name, value } = e.target;
+    setCarDetails((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
+  };
+
+  // Save demographics details (simulate an API call)
+  const saveProfile = async () => {
+    try {
+      // Replace with an actual API call to save the data
+      console.log("Saving demographics: ", demographics);
+      setShowProfilePopup(false); // Close the popup after saving
+      alert("Profile updated successfully");
+    } catch (error) {
+      console.error("Error saving profile: ", error);
+      alert("Failed to save profile");
+    }
+  };
+
+   // Save car details (simulate an API call)
+   const saveCarDetails = async () => {
+    try {
+      // Prepare the car details and user email for the API request
+      const vehicleData = {
+        userEmail, // Email of the user/driver
+        type: carDetails.type, // Vehicle type (e.g., car, van, bike)
+        model: carDetails.model, // Vehicle model
+        seats: carDetails.seats, // Number of seats
+        make: carDetails.make, // Vehicle make (e.g., Toyota, Honda)
+        chasisNumber: carDetails.chassis_number, // Unique chassis number
+        plateNumber: carDetails.plate_number, // Unique plate number
+        insuranceNumber: carDetails.insurance_number, // Insurance policy number
+      };
+  
+      // Call the API to save the vehicle details
+      const response = await axios.post(`${ENV.API_BASE_URL}/customer/book-transport/add-vehicle`, vehicleData);
+  
+      // Handle the response from the API
+      if (response.data.success) {
+        console.log("Vehicle details saved successfully:", response.data);
+        setShowCarPopup(false); // Close the popup after saving
+        toast.success("Vehicle details updated successfully!");
+      } else {
+        console.error("Failed to save vehicle details:", response.data.message);
+        toast.error("Failed to save vehicle details!");
+      }
+    } catch (error) {
+      console.error("Error saving vehicle details:", error);
+      toast.error("Failed to save vehicle details!"); 
+    }
   };
 
   const syncTrips = () => {
@@ -298,6 +414,26 @@ const DriverDashboard = ({ driverId }) => {
           </button>
         </div>
 
+        {/* Icon Section */}
+      <div className="flex items-center space-x-20"> {/* Adjusted here */}
+        {/* Profile Icon */}
+        <div className="relative flex items-center">
+          <FontAwesomeIcon
+            icon={faUser}
+            className="text-2xl cursor-pointer"
+            onClick={toggleProfilePopup} // Toggle profile popup on click
+          />
+        </div>
+
+        {/* Car Icon */}
+        <div className="relative flex items-center">
+          <FontAwesomeIcon
+            icon={faCar}
+            className="text-2xl cursor-pointer"
+            onClick={toggleCarPopup} // Toggle car popup on click
+          />
+        </div>
+
         {/* Notifications Bell */}
         <div className="relative flex items-center">
           <FontAwesomeIcon
@@ -315,6 +451,7 @@ const DriverDashboard = ({ driverId }) => {
           )}
         </div>
       </div>
+    </div>
 
       {/* Notifications Panel */}
       {showNotifications && (
@@ -346,6 +483,196 @@ const DriverDashboard = ({ driverId }) => {
         </div>
       )}
 
+      {/* Profile Popup */}
+{showProfilePopup && (
+  <div className="absolute top-16 right-6 bg-white text-black p-4 rounded-lg shadow-lg w-64">
+    <h3 className="font-bold mb-2">Update Profile</h3>
+
+    {/* Demographics Section */}
+    <form className="space-y-3">
+      <div>
+        <label htmlFor="name" className="block">Name</label>
+        <input
+          id="name"
+          name="name"
+          type="text"
+          value={userName}
+          readOnly
+          className="w-full p-2 border border-gray-300 rounded"
+        />
+      </div>
+      <div>
+        <label htmlFor="email" className="block">Email</label>
+        <input
+          id="email"
+          name="email"
+          type="text"
+          value={userEmail}
+          readOnly
+          className="w-full p-2 border border-gray-300 rounded"
+        />
+      </div>
+      <div>
+        <label htmlFor="phoneNumber" className="block">Phone Number</label>
+        <input
+          id="phoneNumber"
+          name="phoneNumber"
+          type="text"
+          value={demographics.phoneNumber}
+          onChange={handleDemographicChange}
+          className="w-full p-2 border border-gray-300 rounded"
+        />
+      </div>
+      <div>
+        <label htmlFor="Age" className="block">Age</label>
+        <input
+          id="age"
+          name="age"
+          type="number"
+          value={demographics.age}
+          onChange={handleDemographicChange}
+          className="w-full p-2 border border-gray-300 rounded"
+        />
+      </div>
+      <div>
+        <label htmlFor="gender" className="block">Gender</label>
+        <select
+          id="gender"
+          name="gender"
+          value={demographics.gender}
+          onChange={handleDemographicChange}
+          className="w-full p-2 border border-gray-300 rounded"
+        >
+          <option value="">Select Gender</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div>
+              <label htmlFor="address" className="block">Address</label>
+              <textarea
+                id="address"
+                name="address"
+                value={demographics.address}
+                onChange={handleDemographicChange}
+                className="w-full p-2 border border-gray-300 rounded"
+              />
+            </div>
+      <button
+        type="button"
+        onClick={saveProfile}
+        className="w-full bg-blue-500 text-white py-2 rounded mt-4"
+      >
+        Save Changes
+      </button>
+    </form>
+  </div>
+)}
+
+{/* Vehicle Popup */}
+{showCarPopup && (
+  <div className="absolute top-16 right-6 bg-white text-black p-4 rounded-lg shadow-lg w-64">
+    <h3 className="font-bold mb-2">Add Vehicle</h3>
+
+    {/* Vehicle Details Section */}
+    <form className="space-y-3">
+      <div>
+        <label htmlFor="type" className="block">Car Type</label>
+        <select
+          id="type"
+          name="type"
+          value={carDetails.type}
+          onChange={handleCarDetailChange}
+          className="w-full p-2 border border-gray-300 rounded"
+        >
+          <option value="small car">Small Car</option>
+          <option value="large car">Large Car</option>
+          <option value="mototaxi">Mototaxi</option>
+          <option value="van">Van</option>
+          <option value="truck">Truck</option>
+        </select>
+      </div>
+      {/* Other fields for vehicle */}
+      <div>
+        <label htmlFor="model" className="block">Model</label>
+        <input
+          id="model"
+          name="model"
+          type="text"
+          value={carDetails.model}
+          onChange={handleCarDetailChange}
+          className="w-full p-2 border border-gray-300 rounded"
+        />
+      </div>
+      <div>
+        <label htmlFor="seats" className="block">Seats</label>
+        <input
+          id="seats"
+          name="seats"
+          type="number"
+          value={carDetails.seats}
+          onChange={handleCarDetailChange}
+          className="w-full p-2 border border-gray-300 rounded"
+        />
+      </div>
+      <div>
+        <label htmlFor="make" className="block">Make</label>
+        <input
+          id="make"
+          name="make"
+          type="text"
+          value={carDetails.make}
+          onChange={handleCarDetailChange}
+          className="w-full p-2 border border-gray-300 rounded"
+        />
+      </div>
+      <div>
+        <label htmlFor="chassis_number" className="block">Chassis Number</label>
+        <input
+          id="chassis_number"
+          name="chassis_number"
+          type="text"
+          value={carDetails.chassis_number}
+          onChange={handleCarDetailChange}
+          className="w-full p-2 border border-gray-300 rounded"
+        />
+      </div>
+      <div>
+        <label htmlFor="plate_number" className="block">Plate Number</label>
+        <input
+          id="plate_number"
+          name="plate_number"
+          type="text"
+          value={carDetails.plate_number}
+          onChange={handleCarDetailChange}
+          className="w-full p-2 border border-gray-300 rounded"
+        />
+      </div>
+      <div>
+        <label htmlFor="insurance_number" className="block">Insurance Number</label>
+        <input
+          id="insurance_number"
+          name="insurance_number"
+          type="text"
+          value={carDetails.insurance_number}
+          onChange={handleCarDetailChange}
+          className="w-full p-2 border border-gray-300 rounded"
+        />
+      </div>
+      <button
+        type="button"
+        onClick={saveCarDetails}
+        className="w-full bg-blue-500 text-white py-2 rounded mt-4"
+      >
+        Save Vehicle Details
+      </button>
+    </form>
+    < ToastContainer/>
+  </div>
+)}
+
+
       {/* Welcome Message */}
       <div className="text-center mt-10 mb-6">
         <h2 className="text-4xl font-semibold text-yellow-200">Welcome, {userName}</h2>
@@ -361,6 +688,15 @@ const DriverDashboard = ({ driverId }) => {
           <div>
             <p className="text-xl">{trip.pickup} → {trip.dropoff}</p>
             <p className="text-sm text-gray-300">{trip.details}</p>
+            <p className="text-md font-bold text-pink-600">
+                    Customer Name: <span className="text-sm text-gray-300">{trip.username}</span>
+                </p>
+            <p className="text-md font-bold text-blue-600">
+                Fare: <span className="text-sm text-gray-300">S/{trip.price}</span>
+            </p>
+            <p className="text-md font-bold text-green-600">
+                Payment Method: <span className="text-sm text-gray-300">{trip.payment}</span>
+            </p>
           </div>
           <FontAwesomeIcon
             icon={faAngleDown}
@@ -396,6 +732,15 @@ const DriverDashboard = ({ driverId }) => {
               <div>
                 <p className="text-xl">{trip.pickup} → {trip.dropoff}</p>
                 <p className="text-sm text-gray-300">{trip.details}</p>
+                <p className="text-md font-bold text-pink-600">
+                    Customer Name: <span className="text-sm text-gray-300">{trip.username}</span>
+                </p>
+                <p className="text-md font-bold text-blue-600">
+                    Fare: <span className="text-sm text-gray-300">S/{trip.price}</span>
+                </p>
+                <p className="text-md font-bold text-green-600">
+                    Payment Method: <span className="text-sm text-gray-300">{trip.payment}</span>
+                </p>
               </div>
             </div>
           </div>

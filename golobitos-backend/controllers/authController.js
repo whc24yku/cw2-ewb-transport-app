@@ -81,10 +81,10 @@ const mapRoleToUser = async (req, res) => {
 
 // Fetch phone number for a user by email (GET request with email as a query parameter)
 const fetchUserPhone = async (req, res) => {
-  const { email } = req.query; // Get email from query parameters
+  const { email } = req.query; 
 
   if (!email) {
-    return res.status(400).json({ error: 'Email parameter is required' }); // Validate input
+    return res.status(400).json({ error: 'Email parameter is required' }); 
   }
 
   try {
@@ -106,10 +106,10 @@ const fetchUserPhone = async (req, res) => {
 
 // Fetch user details by phone number (GET request with email as a query parameter)
 const fetchUserWithPhone = async (req, res) => {
-  const { phone } = req.query; // Get phone number from query parameters
+  const { phone } = req.query; 
 
   if (!phone) {
-    return res.status(400).json({ error: 'Phone parameter is required' }); // Validate input
+    return res.status(400).json({ error: 'Phone parameter is required' }); 
   }
 
   try {
@@ -117,14 +117,14 @@ const fetchUserWithPhone = async (req, res) => {
     const user = await db('users').where({ phoneNumber: phone }).first();
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' }); // If user doesn't exist
+      return res.status(404).json({ error: 'User not found' }); 
     }
 
     // Return user details (excluding sensitive information like password)
     res.status(200).json({ user: { name: user.name, email: user.email } });
   } catch (error) {
     console.error('Error fetching user:', error);
-    res.status(500).json({ error: 'Error fetching user' }); // Handle unexpected errors
+    res.status(500).json({ error: 'Error fetching user' }); 
   }
 }
 

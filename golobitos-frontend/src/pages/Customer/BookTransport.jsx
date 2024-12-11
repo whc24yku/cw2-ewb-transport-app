@@ -46,8 +46,12 @@ const CustomerBookTransport = () => {
   const [price, setPrice] = useState(null);  // State to hold the price
   const [error, setError] = useState(null);
   const [isShared, setIsShared] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('');
   const [customerCount, setCustomerCount] = useState('');
   const { language, setLanguage } = useLanguage(); // Get language and setter from context
+
+  const paymentOptions = ['Credit/Debit Card', 'Google Pay', 'Apple Pay', 'Cash'];
+
 
   useEffect(() => {
     const userDetails = JSON.parse(localStorage.getItem('userDetails'));
@@ -158,6 +162,7 @@ const CustomerBookTransport = () => {
         options = [
           { value: 'smallcar', label: language === 'en' ? 'Small Car' : 'Coche Pequeño' },
           { value: 'largecar', label: language === 'en' ? 'Large Car' : 'Coche Grande' },
+          { value: 'mototaxi', label: language === 'en' ? 'Mototaxi' : 'mototaxi' },
           { value: 'van', label: language === 'en' ? 'Van' : 'Furgoneta' },
         ];
       } else if (['livestock', 'food', 'fish', 'general'].includes(transportType)) {
@@ -212,6 +217,7 @@ const transportOptions = [
 const [vehicleOptions, setVehicleOptions] = useState([
   { value: 'smallcar', label: language === 'en' ? 'Small Car' : 'Coche Pequeño' },
   { value: 'largecar', label: language === 'en' ? 'Large Car' : 'Coche Grande' },
+  { value: 'mototaxi', label: language === 'en' ? 'Mototaxi' : 'mototaxi' },
   { value: 'van', label: language === 'en' ? 'Van' : 'Furgoneta' },
   { value: 'truck', label: language === 'en' ? 'Truck' : 'Camión' },
 ]);
@@ -231,6 +237,7 @@ const [vehicleOptions, setVehicleOptions] = useState([
         ...(transportType === 'standard' || transportType === 'medical'
           ? { customerCount }
           : { weight }),
+          
       });
 
       if (response.data) {
@@ -258,6 +265,10 @@ const [vehicleOptions, setVehicleOptions] = useState([
             ? { customerCount }
             : { weight }),
             isPriority,
+            paymentMethod,
+            estimatedPrice: price,
+            userEmail,
+            userName,
         });;
         
         if (response.data.success) {
@@ -537,13 +548,34 @@ const [vehicleOptions, setVehicleOptions] = useState([
           </label>
         </div>
 
+        <div className="mt-4">
+          <label htmlFor="paymentMethod" className="block text-lg font-semibold mb-2">
+            Payment Method
+          </label>
+          <select
+            id="paymentMethod"
+            value={paymentMethod}
+            onChange={(e) => setPaymentMethod(e.target.value)}
+            className="w-full p-2 mb-4 rounded-lg text-[#027f86] bg-white focus:outline-none"
+          >
+            <option value="" disabled>
+              Select Payment Method
+            </option>
+            {paymentOptions.map((method) => (
+              <option key={method} value={method}>
+                {method}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* Get Price Button */}
-        <div className="mb-3 text-center">
+        <div className="mb-4 text-center">
           <button
             onClick={handleGetPrice}
             className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all"
           >
-            {language === 'en' ? 'Get Price' : 'Obtener Precio'}
+            {language === 'en' ? 'Get Fare' : 'Obtener Precio'}
           </button>
         </div>
 
@@ -552,7 +584,7 @@ const [vehicleOptions, setVehicleOptions] = useState([
           {price !== null ? (
             
               <div className="text-xl font-semibold text-green-600">
-                {language === 'en' ? `Estimated Price: $${price}` : `Precio Estimado: $${price}`}
+                {language === 'en' ? `Estimated Price: S/${price}` : `Precio Estimado: S/${price}`}
               </div>
             
           ) : error ? (
