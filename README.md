@@ -12,5 +12,6 @@ export ENV_FILE=.env.local
 ```
 
 ### Run the App
-
+```bash
 uvicorn app.main:app --reload
+```
