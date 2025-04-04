@@ -9,3 +9,5 @@
 
 ```bash
 export ENV_FILE=.env.local
+
+### Run the App
