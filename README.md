@@ -1,15 +1,1 @@
-```sql
-CREATE TABLE mvp.blockboard_rules (
-    id SERIAL PRIMARY KEY,                -- Unique ID for each rule version (auto-incremented)
-    rule_id UUID NOT NULL,                -- Unique identifier for the rule (generated in Python)
-    rule_name TEXT NULL,                  -- Rule name
-    rule_version INTEGER NOT NULL,        -- Version number for the rule
-    rule_data JSONB NULL,                 -- The rule stored as JSONB
-    active  BOOLEAN NOT NULL,             -- To activate the rule
-    saved_rule JSONB NULL,                -- The rule saved temporarily as JSONB
-    created_at TIMESTAMP DEFAULT NOW(),   -- Timestamp of creation
-    updated_at TIMESTAMP DEFAULT NOW(),   -- Timestamp of last update
-    CONSTRAINT unique_rule_name UNIQUE (rule_name),  -- Ensure unique rule names across all rules
-    CONSTRAINT unique_rule_version UNIQUE (rule_id, rule_version) -- Ensure unique versions per rule
-);
-```
+
